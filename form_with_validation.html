@@ -4,22 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>1</title>
-    <link rel="stylesheet" href="css//bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/font-awesome.min.css">
     <link href="css/styles.css" rel="stylesheet">
     <script src="js/vue.js"></script>
 </head>
 <body>
+<style>
+    .error {
+        background: red;
+    }
+    .success {
+        background: green;
+    }
+</style>
     <div class="wrapper">
-        <div class="sample">
+        <div id="sample">
             <form>
         		<div class="progress">
-					<div class="progress-bar"></div>
+					<div class="progress-bar" :style="progressBarWidth"></div>
 				</div>
 				<div>
-					<div class="form-group">
-	                    <label>name</label>
-	                    <input type="text" class="form-control">
+					<div class="form-group" v-for="field in info" :class="result[field.name]">
+	                    <label>{{ field.name }}</label>
+	                    <input type="text"
+                               class="form-control"
+                               v-model="field.value"
+                               @input="check(field)"
+                        >
 	                </div>
 				</div>
 				<button class="btn btn-primary">
@@ -28,9 +40,9 @@
 			</form>
 			<div>
 				<table class="table table-bordered">
-					<tr>
-						<td></td>
-						<td></td>
+					<tr v-for="field in info">
+						<td>{{ field.name }}</td>
+						<td>{{ field.value }}</td>
 					</tr>
 				</table>
 			</div>
@@ -39,7 +51,7 @@
 	<script>
 		
 		new Vue({
-			el: '.sample',
+			el: '#sample',
 			data: {
 				info: [
 					{
@@ -67,8 +79,38 @@
 						value: '',
 						pattern: /.+/
 					}
-				]
-			}
+				],
+                result: [],
+                control: [],
+                done: ''
+			},
+            computed: {
+			    progressBarWidth() {
+			        return {
+			            width: (this.done*100/this.info.length) + '%'
+                    }
+                }
+            },
+            methods: {
+                check(field) {
+                    if (field.pattern.test(field.value)) {
+                        this.result[field.name] = 'success';
+
+                        if (!(field.name in this.control)) {
+                            this.done++;
+                            this.control[field.name] = true;
+                        }
+                    } else {
+                        this.result[field.name] = 'error';
+
+                        if (field.name in this.control) {
+                            this.done--;
+                            delete this.control[field.name];
+                        }
+
+                    }
+                }
+            }
 		});
 	</script>
 </body>
