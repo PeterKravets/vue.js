@@ -12,33 +12,37 @@
 <body>
 <style>
     .error {
-        background: red;
+        color: red;
     }
     .success {
-        background: green;
+        color: green;
     }
 </style>
     <div class="wrapper">
         <div id="sample">
-            <form>
+            <form v-if="!formSubmitted" @submit.prevent="formSubmitted = true">
         		<div class="progress">
 					<div class="progress-bar" :style="progressBarWidth"></div>
 				</div>
 				<div>
-					<div class="form-group" v-for="field in info" :class="result[field.name]">
+					<div class="form-group" v-for="(field, index) in info">
 	                    <label>{{ field.name }}</label>
+                        <i class="fa"
+                           v-if="controls[index].activated"
+                           :class="controls[index].error ?
+                           'fa-exclamation-circle error' :
+                           'fa fa-check-circle success' ">
+                        </i>
 	                    <input type="text"
                                class="form-control"
-                               v-model="field.value"
-                               @input="check(field)"
-                        >
+                               @input="check(index, $event.target.value)">
 	                </div>
 				</div>
-				<button class="btn btn-primary">
+				<button class="btn btn-primary" :disabled="done < info.length">
 					Send Data
 				</button>
 			</form>
-			<div>
+			<div v-else>
 				<table class="table table-bordered">
 					<tr v-for="field in info">
 						<td>{{ field.name }}</td>
@@ -80,35 +84,42 @@
 						pattern: /.+/
 					}
 				],
-                result: [],
-                control: [],
-                done: ''
+                controls: [],
+                formSubmitted: false
 			},
+            created() {
+			    for(let item in this.info) {
+			        this.controls.push({
+                        error: false,
+                        activated: false
+                    });
+                }
+            },
             computed: {
+			    done() {
+			        let done = 0;
+
+                    for(let item in this.controls) {
+                        console.log(this.controls);
+                        if (! this.controls[item].error && this.controls[item].activated) {
+                            done++;
+                        }
+                    }
+
+                    return done;
+                },
 			    progressBarWidth() {
 			        return {
-			            width: (this.done*100/this.info.length) + '%'
+			            width: (this.done * 100 / this.info.length) + '%'
                     }
                 }
             },
             methods: {
-                check(field) {
-                    if (field.pattern.test(field.value)) {
-                        this.result[field.name] = 'success';
+                check(index, value) {
+                    this.info[index].value = value;
 
-                        if (!(field.name in this.control)) {
-                            this.done++;
-                            this.control[field.name] = true;
-                        }
-                    } else {
-                        this.result[field.name] = 'error';
-
-                        if (field.name in this.control) {
-                            this.done--;
-                            delete this.control[field.name];
-                        }
-
-                    }
+                    this.controls[index].error = !this.info[index].pattern.test(value);
+                    this.controls[index].activated = true;
                 }
             }
 		});
