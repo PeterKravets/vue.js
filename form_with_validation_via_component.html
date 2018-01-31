@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link href="css/styles.css" rel="stylesheet">
+    <script src="js/vue.js"></script>
+</head>
+<body>
+<style>
+    .error {
+        color: red;
+    }
+    .success {
+        color: green;
+    }
+</style>
+    <div class="wrapper">
+        <div id="sample">
+            <form v-if="!formSubmitted" @submit.prevent="formSubmitted = true">
+        		<div class="progress">
+					<div class="progress-bar" :style="progressBarWidth"></div>
+				</div>
+				<div>
+					<my-app-validation-input v-for="(field, index) in info"
+                                             :key="index"
+                                             @incrementbar="onProgressBar(index, true)"
+                                             @decrementbar="onProgressBar(index, false)"
+                                             :item="field">
+                    </my-app-validation-input>
+				</div>
+				<button class="btn btn-primary" :disabled="!done">
+					Send Data
+				</button>
+			</form>
+			<div v-else>
+				<table class="table table-bordered">
+					<tr v-for="field in info">
+						<td>{{ field.name }}</td>
+						<td>{{ field.value }}</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+    </div>
+
+	<template id="validation-input-template">
+		<div class="form-group">
+			<label>{{ item.name }}</label>
+			<i class="fa"
+               v-if="activated"
+			   :class="getClass">
+			</i>
+			<input type="text"
+				   class="form-control"
+                   v-model="item.value"
+                   @input="setActivated"
+                   >
+		</div>
+	</template>
+	<script>
+
+		Vue.component('my-app-validation-input', {
+		    template: '#validation-input-template',
+            props: ['item'],
+            data() {
+		        return {
+		            activated: false,
+                }
+            },
+            computed: {
+                validate() {
+                    let valid = this.item.pattern.test(this.item.value);
+
+                    if(valid) {
+                        this.$emit('incrementbar');
+                    } else {
+                        this.$emit('decrementbar');
+                    }
+
+                    return valid;
+                },
+                getClass() {
+                    return this.validate ?
+                        'fa fa-check-circle success' :
+                        'fa-exclamation-circle error';
+                }
+            },
+            methods: {
+                setActivated() {
+                    this.activated = true;
+                }
+            }
+		});
+		
+		new Vue({
+			el: '#sample',
+			data: {
+				info: [
+					{
+						name: 'Name',
+						value: '',
+						pattern: /^[a-zA-Z ]{2,30}$/
+					},
+					{
+						name: 'Phone',
+						value: '',
+						pattern: /^[0-9]{7,14}$/
+					},
+					{
+						name: 'Email',
+						value: '',
+						pattern: /.+/
+					},
+					{
+						name: 'Some Field 1',
+						value: '',
+						pattern: /.+/
+					},
+					{
+						name: 'Some Field 2',
+						value: '',
+						pattern: /.+/
+					}
+				],
+                formSubmitted: false,
+                progressBar: []
+			},
+            computed: {
+                progressBarWidth() {
+                    return {
+                        width: (this.progressBar.length * 100 / this.info.length) + '%'
+                    }
+                },
+				done() {
+                    return this.progressBar.length == this.info.length;
+				}
+            },
+            methods: {
+                onProgressBar(index, inc) {
+                    if (inc) {
+                        if(!this.progressBar.includes(index)) {
+                            this.progressBar.push(index);
+                        }
+					} else {
+                        if(this.progressBar.includes(index)) {
+                            this.progressBar.splice(index, 1);
+                        }
+					}
+                }
+        	}
+		});
+	</script>
+</body>
+</html>
