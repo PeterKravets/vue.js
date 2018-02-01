@@ -21,7 +21,7 @@
         </form>
         <div v-else>
             <table class="table table-bordered">
-                <tr v-for="field in info">
+                <tr v-for="(field, index) in info">
                     <td>{{ field.name }}</td>
                     <td>{{ field.value }}</td>
                 </tr>
@@ -64,14 +64,17 @@
                    }
                ],
                formSubmitted: false,
-               progressBar: 0,
+               done: 0,
                controls: []
            }
         },
+       created() {
+         for (let index in this.info) {
+             this.controls.push(this.info[index].pattern.test(this.info[index].value));
+         }
+
+       },
        computed: {
-           done() {
-               return this.controls.length;
-           },
            progressBarWidth() {
                return {
                    width: (this.done * 100 / this.info.length) + '%'
@@ -81,14 +84,17 @@
        methods: {
            onDataChange(index, data) {
                this.info[index].value = data.value;
+               this.controls[index] = data.validate;
 
-               if(data.validate && !this.controls.includes(index)) {
-                   this.controls.push(index);
+               let done = 0;
+
+               for (let index in this.controls) {
+                   if (this.controls[index]) {
+                       done++;
+                   }
                }
 
-               if(!data.validate && this.controls.includes(index)) {
-                   this.controls.splice(this.controls.indexOf(index), 1);
-               }
+               this.done = done;
            }
        },
        components: {

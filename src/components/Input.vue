@@ -44,7 +44,7 @@
         methods: {
             onInput(value) {
                 this.$emit('datachanged', {
-                    validate: this.pattern.test(this.value),
+                    validate: this.pattern.test(value),
                     value: value
                 });
 
