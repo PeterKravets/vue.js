@@ -7,41 +7,47 @@
         </i>
         <input type="text"
                class="form-control"
-               v-model="value"
-               @input="setActivated"
+               @input="onInput($event.target.value)"
         >
     </div>
 </template>
 
 <script>
     export default {
-        name: "input",
-        props: ['name', 'value', 'pattern'],
+        props: {
+            name: {
+                validator(val) {
+                    return val != '' && val.length < 20;
+                }
+            },
+            value: {
+                type: [String, Number],
+                required: true,
+            },
+            pattern: {
+                type:RegExp,
+                required: true
+            }
+        },
         data() {
             return {
                 activated: false,
             }
         },
         computed: {
-            validate() {
-                let valid = this.pattern.test(this.value);
-
-                if(valid) {
-                    this.$emit('incrementbar');
-                } else {
-                    this.$emit('decrementbar');
-                }
-
-                return valid;
-            },
             getClass() {
-                return this.validate ?
+                return this.pattern.test(this.value) ?
                     'fa fa-check-circle success' :
                     'fa-exclamation-circle error';
             }
         },
         methods: {
-            setActivated() {
+            onInput(value) {
+                this.$emit('datachanged', {
+                    validate: this.pattern.test(this.value),
+                    value: value
+                });
+
                 this.activated = true;
             }
         }

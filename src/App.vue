@@ -5,17 +5,17 @@
                 <div class="progress-bar" :style="progressBarWidth"></div>
             </div>
             <div>
-                <app-input v-for="(field, index) in info"
-                           :key="index"
-                           :name="field.name"
-                           :value="field.value"
-                           :pattern="field.pattern"
-                           @incrementbar="onProgressBar(index, true)"
-                           @decrementbar="onProgressBar(index, false)"
+                <app-input
+                       v-for="(field, index) in info"
+                       :key="index"
+                       :name="field.name"
+                       :value="field.value"
+                       :pattern="field.pattern"
+                       @datachanged="onDataChange(index, $event)"
                 >
                 </app-input>
             </div>
-            <button class="btn btn-primary" :disabled="!done">
+            <button class="btn btn-primary" :disabled="done != info.length">
                 Send Data
             </button>
         </form>
@@ -64,29 +64,30 @@
                    }
                ],
                formSubmitted: false,
-               progressBar: 0
+               progressBar: 0,
+               controls: []
            }
         },
        computed: {
+           done() {
+               return this.controls.length;
+           },
            progressBarWidth() {
                return {
-                   width: (this.progressBar.length * 100 / this.info.length) + '%'
+                   width: (this.done * 100 / this.info.length) + '%'
                }
            },
-           done() {
-               return this.progressBar.length == this.info.length;
-           }
        },
        methods: {
-           onProgressBar(index, inc) {
-               if (inc) {
-                   if(!this.progressBar.includes(index)) {
-                       this.progressBar.push(index);
-                   }
-               } else {
-                   if(this.progressBar.includes(index)) {
-                       this.progressBar.splice(index, 1);
-                   }
+           onDataChange(index, data) {
+               this.info[index].value = data.value;
+
+               if(data.validate && !this.controls.includes(index)) {
+                   this.controls.push(index);
+               }
+
+               if(!data.validate && this.controls.includes(index)) {
+                   this.controls.splice(this.controls.indexOf(index), 1);
                }
            }
        },
@@ -94,6 +95,14 @@
            AppInput
        }
    }
+
+    /**
+     * Or we can do it via created() hook and setup controlls array,
+     * and then only update it error value "true, false"
+     * But and also we will need cycle in done() computed property
+     * which will go through controls[] array, and check if controls[index] == true, we do done++
+     * and then return done;
+     */
 </script>
 
 <style>
